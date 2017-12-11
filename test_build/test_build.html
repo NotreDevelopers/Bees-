@@ -83,11 +83,9 @@
 	<div id="container"><br /><br /><br /><br /><br />Loading...</div>
 
     <div style="width: 100%; height: 100%; pointer-events: none;">
-        <!--<div style="display: inline-block; position: absolute; overflow: hidden; pointer-events: none; bottom: 0px; left: 0px; width: 1440px; height: 404px;">-->
-            <div id="crosshair-wrapper" class="crosshair show-crosshair" style="position: absolute; top: 50%; left: 50%; height: 50px; width: 50px; transform: translateX(-50%); display:none">
-                <img src="./assets/crosshair_small.png" class="crosshair" style="width:100%; height:100%">
-            </div>
-        <!--</div>-->
+        <div id="crosshair-wrapper" class="crosshair show-crosshair" style="position: absolute; top: 50%; left: 50%; height: 50px; width: 50px; transform: translateX(-60%) translateY(-10%); display:none">
+            <img src="./assets/crosshair_small.png" class="crosshair" style="width:100%; height:100%">
+        </div>
     </div>
 
 	<script src="three.js"></script>
@@ -154,10 +152,10 @@
 //---------------------------------------------------------------------------------------------------------------
 
         var scaler = 1;
-        var moveSpeed = 50;
+        var moveSpeed = 2000;
         var moveTaper = 10;
         var groundLevel = 3;
-        var jumpSpeed = 200;
+        var jumpSpeed = 100;
 
 		var blocker = document.getElementById( 'blocker' );
         var instructions = document.getElementById( 'instructions' );
@@ -246,8 +244,10 @@
         var moveRight = false;
         var canJump = false;
 
+        var playerBody;
+
         var prevTime = performance.now();
-        var velocity = new THREE.Vector3();
+        var velocity = new THREE.Vector3(0, 0, 0);
 
 //---------------------------------------------------------------------------------------------------------------
 
@@ -273,9 +273,9 @@
 			camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 2000 );
 
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0x000000 );//0xbfd1e5 );
+			scene.background = new THREE.Color( 0x000000 );
 
-			scene.fog = new THREE.Fog( 0x000000, 0, 35 );
+			//scene.fog = new THREE.Fog( 0x000000, 0, 35 );
 
 			camera.position.set( 0, 0, 0 );
 
@@ -307,10 +307,10 @@
                         moveRight = true;
                         break;
 
-                    case 32: // space
+                    /*case 32: // space
                         if ( canJump === true ) velocity.y += jumpSpeed;
                         canJump = false;
-                        break;
+                        break;*/
 
                 }
 
@@ -348,8 +348,8 @@
             document.addEventListener( 'keyup', onKeyUp, false );
 
             // Offset player at beginning
-            controls.getObject().translateZ(20);
-            controls.getObject().translateY(-7);
+            //controls.getObject().translateZ(20);
+            //controls.getObject().translateY(-7);
 
 //---------------------------------------------------------------------------------------------------------------
 
@@ -468,9 +468,9 @@
 			}
 
 			// Mountain
-			var mountainMass = 860;
+			var mountainMass = 0;
 			var mountainHalfExtents = new THREE.Vector3( 4 * scaler, 5 * scaler, 4 * scaler );
-			pos.set( 5 * scaler, mountainHalfExtents.y * 0.5, - 7 * scaler );
+			pos.set( 5 * scaler, mountainHalfExtents.y * 5  , - 7 * scaler );
 			quat.set( 0, 0, 0, 1 );
 			var mountainPoints = [];
 			mountainPoints.push( new THREE.Vector3( mountainHalfExtents.x, - mountainHalfExtents.y, mountainHalfExtents.z ) );
@@ -481,9 +481,20 @@
 			var mountain = new THREE.Mesh( new THREE.ConvexGeometry( mountainPoints ), createMaterial( 0xFFB443 ) );
 			mountain.position.copy( pos );
 			mountain.quaternion.copy( quat );
-			convexBreaker.prepareBreakableObject( mountain, mountainMass, new THREE.Vector3(), new THREE.Vector3(), true );
-			createDebrisFromBreakableObject( mountain );
+			//convexBreaker.prepareBreakableObject( mountain, mountainMass, new THREE.Vector3(), new THREE.Vector3(), true );
+			//createDebrisFromBreakableObject( mountain );
+			createRigidBody(mountain, createConvexHullPhysicsShape(mountainPoints), mountainMass, mountain.position, mountain.quat);
 
+            // Dodecahedron
+			var doMass = 120;
+			quat.set( 0, 0, 0, 1 );
+            pos.set( 0 * scaler, 2 * scaler, 15 * ( 0.5 - i / ( numStones + 1 ) ) * scaler );
+            doMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), createMaterial( 0xB0B0B0 ));
+            convexBreaker.prepareBreakableObject( doMesh, doMass, new THREE.Vector3(), new THREE.Vector3(), true);
+            createDebrisFromBreakableObject(doMesh);
+            //createRigidBody(doMesh, createConvexHullPhysicsShape(doMesh.geometry.vertices), doMass, pos, quat);
+
+            // Test enemy
 			var enemyMass = 100;
 			pos.set(-5 * scaler, 0.5, 5 * scaler);
 			quat.set(0, 0, 0, 1);
@@ -498,6 +509,14 @@
             enemy.quaternion.copy(quat);
             convexBreaker.prepareBreakableObject( enemy, enemyMass, new THREE.Vector3(), new THREE.Vector3(), true );
 			createDebrisFromBreakableObject( enemy );
+
+			// Player
+			var playerMass = 1;
+			pos.set(5, 5, 0);
+			quat.set(0, 0, 0, 1);
+			player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), createMaterial(0xffff00));
+            playerBody = createRigidBody(player, new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5)), playerMass, pos, quat);
+            //player.add(controls.getObject());
 		}
 
 		function createParalellepipedWithPhysics( sx, sy, sz, mass, pos, quat, material ) {
@@ -675,7 +694,7 @@
                 velocity.x -= velocity.x * moveTaper * delta;
                 velocity.z -= velocity.z * moveTaper * delta;
 
-                velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+                //velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
                 if ( moveForward ) velocity.z -= moveSpeed * delta;
                 if ( moveBackward ) velocity.z += moveSpeed * delta;
@@ -683,15 +702,27 @@
                 if ( moveLeft ) velocity.x -= moveSpeed * delta;
                 if ( moveRight ) velocity.x += moveSpeed * delta;
 
-                controls.getObject().translateX( velocity.x * delta );
-                controls.getObject().translateY( velocity.y * delta );
-                controls.getObject().translateZ( velocity.z * delta );
+                //controls.getObject().translateX( velocity.x * delta );
+                //controls.getObject().translateY( velocity.y * delta );
+                //controls.getObject().translateZ( velocity.z * delta );
 
-                if ( controls.getObject().position.y < groundLevel ) {
+                /*if ( controls.getObject().position.y < groundLevel ) {
                     velocity.y = 0;
                     controls.getObject().position.y = groundLevel;
                     canJump = true;
-                }
+                }*/
+
+                controls.getObject().position.x = (controls.getObject().position.x + player.position.x)/2;
+                controls.getObject().position.y = (controls.getObject().position.y + player.position.y + 4)/2;
+                controls.getObject().position.z = (controls.getObject().position.z + player.position.z)/2;
+
+                var forward = controls.getObject().getWorldDirection().normalize();
+                var right = new THREE.Vector3(forward.x, forward.y, forward.z);
+                right.cross(new THREE.Vector3(0, -1, 0)).normalize();
+
+                //playerBody.applyForce( new Ammo.btVector3(velocity.x * delta, velocity.y * delta, velocity.z * delta));
+                playerBody.applyForce( new Ammo.btVector3( velocity.z * forward.x * delta, 0, velocity.z * forward.z * delta ) );
+                playerBody.applyForce( new Ammo.btVector3( velocity.x * right.x * delta, 0, velocity.x * right.z * delta ) );
 
                 prevTime = time;
 
