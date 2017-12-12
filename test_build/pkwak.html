@@ -488,20 +488,30 @@
 			convexBreaker.prepareBreakableObject( mountain, mountainMass, new THREE.Vector3(), new THREE.Vector3(), true );
 			createDebrisFromBreakableObject( mountain );
 
-			// var enemyMass = 100;
-			// pos.set(-5 * scaler, 0.5, 5 * scaler);
-			// quat.set(0, 0, 0, 1);
-            // var enemyPoints = [];
-            //     enemyPoints.push(new THREE.Vector3(0, -1, 0));
-            //     enemyPoints.push(new THREE.Vector3(-0.66, 0, -0.66));
-            //     enemyPoints.push(new THREE.Vector3(-0.66, 0, 0.66));
-            //     enemyPoints.push(new THREE.Vector3(1, 0, 0));
-            //     enemyPoints.push(new THREE.Vector3(0, 1, 0));
-            // var enemy = new THREE.Mesh(new THREE.ConvexGeometry(enemyPoints), createMaterial(0xFFB443));
-            // enemy.position.copy(pos);
-            // enemy.quaternion.copy(quat);
-            // convexBreaker.prepareBreakableObject( enemy, enemyMass, new THREE.Vector3(), new THREE.Vector3(), true );
-			// createDebrisFromBreakableObject( enemy );
+			// Trees
+			var numTrees = 8;
+			for (var i = 0; i < numTrees; i++) {
+				var radius = 1;
+				var geometry = new THREE.CylinderGeometry( radius, radius, 10, 32 );
+				var material = new THREE.MeshBasicMaterial( {color: 0xfff000} );
+				var cylinder = new THREE.Mesh( geometry, material );
+				quat.set( 0, 0, 0, 1 );
+				// var numTrees = 8;
+				// for ( var i = 0; i < numStones; i++ ) {
+				// 	pos.set( 0 * scaler, 2 * scaler, 15 * ( 0.5 - i / ( numStones + 1 ) ) * scaler );
+				// 	scene.add( cylinder );
+				// }
+				// pos.z equals 15 * ( 0.5 - i / ( numTrees + 1 ) ) * scaler for below func set()
+				// pos.set( 30 * ( 0.5 - i / ( numTrees + 1 ) ), 2 * scaler, 15 * ( 0.5 - i / ( numTrees + 1 ) ) );
+				// 40 comes from plane size
+ 				pos.set( 40 * (.5 - Math.random()), 2 * scaler, 40 * (.5 - Math.random()) );
+				cylinder.position.copy(pos);
+	            cylinder.quaternion.copy(quat);
+				var cylinderShape = new Ammo.btCylinderShape( new Ammo.btVector3( 1.1, 5.25, 1.1 ) );
+				var cylinderMass = 0;
+				createRigidBody( cylinder, cylinderShape, cylinderMass, pos, quat );
+				scene.add( cylinder );
+			}
 		}
 
 		function createEnemies() {
@@ -734,13 +744,13 @@
 				}
 
 				// Enemy
-				if(enemyList.length > 0) {
-					for(var i = 0; i < enemyList.length; i++) {
-						console.log(enemyList[i]);
-						//var distance = controls.getObject().position - enemyList[i].position;
-						//console.log(distance);
-					}
-				}
+				// if(enemyList.length > 0) {
+				// 	for(var i = 0; i < enemyList.length; i++) {
+				// 		console.log(enemyList[i]);
+				// 		//var distance = controls.getObject().position - enemyList[i].position;
+				// 		//console.log(distance);
+				// 	}
+				// }
 
             }
 

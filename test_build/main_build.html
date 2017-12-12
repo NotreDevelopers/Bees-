@@ -416,6 +416,31 @@
 			quat.set(0, 0, 0, 1);
 			player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), createMaterial(0xffff00));
             playerBody = createRigidBody(player, new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5)), playerMass, pos, quat);
+
+			// Trees
+			var numTrees = groundSize / 5;
+			for (var i = 0; i < numTrees; i++) {
+				var radius = 1;
+				var geometry = new THREE.CylinderGeometry( radius, radius, 10, 32 );
+				var material = new THREE.MeshBasicMaterial( {color: 0xfff000} );
+				var cylinder = new THREE.Mesh( geometry, material );
+				quat.set( 0, 0, 0, 1 );
+				// var numTrees = 8;
+				// for ( var i = 0; i < numStones; i++ ) {
+				// 	pos.set( 0 * scaler, 2 * scaler, 15 * ( 0.5 - i / ( numStones + 1 ) ) * scaler );
+				// 	scene.add( cylinder );
+				// }
+				// pos.z equals 15 * ( 0.5 - i / ( numTrees + 1 ) ) * scaler for below func set()
+				// pos.set( 30 * ( 0.5 - i / ( numTrees + 1 ) ), 2 * scaler, 15 * ( 0.5 - i / ( numTrees + 1 ) ) );
+				// 40 comes from plane size
+ 				pos.set( groundSize * (.5 - Math.random()), 2, groundSize * (.5 - Math.random()) );
+				cylinder.position.copy(pos);
+	            cylinder.quaternion.copy(quat);
+				var cylinderShape = new Ammo.btCylinderShape( new Ammo.btVector3( 1.1, 5.25, 1.1 ) );
+				var cylinderMass = 0;
+				createRigidBody( cylinder, cylinderShape, cylinderMass, pos, quat );
+				scene.add( cylinder );
+			}
 		}
 
 		function createEnemies() {
