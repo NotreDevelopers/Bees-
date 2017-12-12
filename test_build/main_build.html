@@ -171,7 +171,7 @@
         var prevTime = performance.now();
         var force = new THREE.Vector3();
 
-        var moveSpeed = 50;
+        var moveSpeed = 3000;
         var moveTaper = 10;
         var groundLevel = 3;
         var groundSize = 100;
@@ -423,6 +423,8 @@
 			quat.set(0, 0, 0, 1);
 			player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), createMaterial(0xffff00));
             playerBody = createRigidBody(player, new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5)), playerMass, pos, quat);
+            playerBody.setFriction(0.0);
+            playerBody.setDamping(0.999, 0.999);
 
 			// Trees
 			var numTrees = groundSize / 5;
@@ -658,8 +660,9 @@
                 var right = new THREE.Vector3(forward.x, forward.y, forward.z);
                 right.cross(new THREE.Vector3(0, -1, 0)).normalize();
 
-                playerBody.applyForce( new Ammo.btVector3( force.z * forward.x * delta, 0, force.z * forward.z * delta ) );
-                playerBody.applyForce( new Ammo.btVector3( force.x * right.x * delta, 0, force.x * right.z * delta ) );
+                playerBody.applyImpulse( new Ammo.btVector3( force.z * forward.x * delta, 0, force.z * forward.z * delta ) );
+                playerBody.applyImpulse( new Ammo.btVector3( force.x * right.x * delta, 0, force.x * right.z * delta ) );
+
 
                 prevTime = time;
 
