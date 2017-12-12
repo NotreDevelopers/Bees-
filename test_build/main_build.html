@@ -59,6 +59,12 @@
 				padding: 5px;
 			}
 
+			#score {
+				position: absolute;
+				top: 12px; width: 100%;
+				padding: 5px;
+			}
+
 			a {
 				color: #a06851;
 			}
@@ -68,7 +74,7 @@
 	<body>
 
 	<div id="info">Press mouse to throw balls and move the camera.</div>
-
+	<div id= "score"></div>
     <div id="blocker">
 
         <div id="instructions">
@@ -86,7 +92,6 @@
             <div id="crosshair-wrapper" class="crosshair show-crosshair" style="position: absolute; top: 50%; left: 50%; height: 50px; width: 50px; transform: translateX(-50%); display:none">
                 <img src="./assets/crosshair_small.png" class="crosshair" style="width:100%; height:100%">
             </div>
-			<div id= "score"></div>
     </div>
 
 	<script src="three.js"></script>
@@ -673,8 +678,9 @@
                                                     controls.getObject().position.z - enemyList[i].position.z);
 
 						enemyRBList[i].applyForce(distance);
-
-						if(distance.x - player.position.x < 1) {
+						// console.log(Math.abs(player.position.x - enemyList[i].position.x));
+						// console.log(Math.abs(player.position.z - enemyList[i].position.z));
+						if((Math.abs(player.position.x - enemyList[i].position.x) < .1) && (Math.abs(player.position.z - enemyList[i].position.z) < 2)) {
 							controlsEnabled = false;
 						}
 					}
