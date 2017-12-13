@@ -15,7 +15,7 @@ THREE.PointerLockControls = function ( camera ) {
 	yawObject.position.y = 10;
 	yawObject.add( pitchObject );
 
-	var PI_2 = Math.PI / 2;
+	var PI_3 = Math.PI / 3;
 
 	var onMouseMove = function ( event ) {
 
@@ -27,7 +27,7 @@ THREE.PointerLockControls = function ( camera ) {
 		yawObject.rotation.y -= movementX * 0.002;
 		pitchObject.rotation.x -= movementY * 0.002;
 
-		pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
+		pitchObject.rotation.x = Math.max( - PI_3, Math.min( PI_3, pitchObject.rotation.x ) );
 
 	};
 
