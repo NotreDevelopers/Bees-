@@ -73,15 +73,18 @@
 	</head>
 	<body>
 
-	<div id="info">Press mouse to throw balls and move the camera.</div>
+	<div id="info">Press mouse/space to throw balls and survive the onslaught of bees.</div>
 	<div id= "score"></div>
-    <div id="blocker">
+    <div id="blocker" style="cursor:pointer">
         <div id="instructions">
+            <span style="font-size:80px">SURVIVE BEES!</span>
+            <br />
+            <span style="font-size:40px">---------------------------</span>
+            <br /><br />
             <span style="font-size:40px">Click to play</span>
             <br /><br />
-            <div id="start" style="width:20px; height:20px; background:white; border-radius:50px; cursor:pointer; display:inline-block"></div>
             <br /><br />
-            (W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)
+            (W, A, S, D = Move, CLICK/SPACE = Shoot, MOUSE = Look around)
         </div>
     </div>
 
@@ -92,7 +95,7 @@
 	<div id="container"><br /><br /><br /><br /><br />Loading...</div>
 
     <div style="width: 100%; height: 100%; pointer-events: none;">
-            <div id="crosshair-wrapper" class="crosshair show-crosshair" style="position: absolute; top: 50%; left: 50%; height: 50px; width: 50px; transform: translateX(-50%); display:none">
+            <div id="crosshair-wrapper" class="crosshair show-crosshair" style="position: absolute; top: 50%; left: 50%; height: 50px; width: 50px; transform: translateX(-50%) translateY(-50%); display:none">
                 <img src="./assets/crosshair_small.png" class="crosshair" style="width:100%; height:100%">
             </div>
     </div>
@@ -117,6 +120,7 @@
 
 		// - Global variables -
 		var enemySpawnCounter = 0;
+		var enemyCounter = 0;
 		var enemyList = [];
 		var enemyRBList = [];
 
@@ -126,7 +130,7 @@
 		var textureLoader;
 		var clock = new THREE.Clock();
 
-		var mouseCoords = new THREE.Vector2();
+		var shootCoords = new THREE.Vector2(0, 0);
 		var raycaster = new THREE.Raycaster();
 		var ballMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff } );
 
@@ -182,7 +186,6 @@
 
 		var blocker = document.getElementById( 'blocker' );
         var instructions = document.getElementById( 'instructions' );
-        var start = document.getElementById( 'start' );
         var crosshair = document.getElementById( 'crosshair-wrapper' );
 
 			var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
@@ -224,7 +227,7 @@
 				document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
 				document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
 
-				start.addEventListener( 'click', function ( event ) {
+				blocker.addEventListener( 'click', function ( event ) {
 					//instructions.style.display = 'none';
 
 					// Ask the browser to lock the pointer
@@ -300,6 +303,10 @@
                     case 39: // right
                     case 68: // d
                         moveRight = true;
+                        break;
+
+                    case 32: // space
+                        fireBall();
                         break;
                 }
 
@@ -419,7 +426,7 @@
 				ground.material.needsUpdate = true;
 			} );
 
-			/*
+
 			// Walls
 			pos.set(0, 0, groundSize*0.5);
 			quat.set(0, 0, 0, 1);
@@ -452,7 +459,7 @@
 			wallShape.setMargin( margin );
 			createRigidBody(wall, wallShape, 0, pos, quat);
 			wall.receiveShadow = true;
-            */
+
 
 
 			// Player
@@ -467,28 +474,25 @@
             playerBody.setDamping(0.999, 0.999);
 
 			// Trees
-			var numTrees = groundSize / 5;
+			var numTrees = 2*groundSize / 5;
 			for (var i = 0; i < numTrees; i++) {
 				var radius = 1;
-				var geometry = new THREE.CylinderGeometry( radius, radius, 10, 32 );
-				var material = createMaterial();
-				var cylinder = new THREE.Mesh( geometry, material );
+				var r = Math.random();
+				var geometry
+				if(r > 0.66)
+                    geometry = new THREE.CylinderGeometry( radius, radius, 20, 32 );
+                else if(r > 0.33)
+                    geometry = new THREE.ConeGeometry( radius, 20, 32 );
+                else
+                    geometry = new THREE.BoxGeometry( 2*radius, 20, 2*radius );
+				var material = createMaterial(0x666666);
+				var tree = new THREE.Mesh( geometry, material );
 				quat.set( 0, 0, 0, 1 );
-				// var numTrees = 8;
-				// for ( var i = 0; i < numStones; i++ ) {
-				// 	pos.set( 0 * scaler, 2 * scaler, 15 * ( 0.5 - i / ( numStones + 1 ) ) * scaler );
-				// 	scene.add( cylinder );
-				// }
-				// pos.z equals 15 * ( 0.5 - i / ( numTrees + 1 ) ) * scaler for below func set()
-				// pos.set( 30 * ( 0.5 - i / ( numTrees + 1 ) ), 2 * scaler, 15 * ( 0.5 - i / ( numTrees + 1 ) ) );
-				// 40 comes from plane size
- 				pos.set( groundSize * (.5 - Math.random()), 2, groundSize * (.5 - Math.random()) );
-				cylinder.position.copy(pos);
-	            cylinder.quaternion.copy(quat);
-				var cylinderShape = new Ammo.btCylinderShape( new Ammo.btVector3( 1.1, 5.25, 1.1 ) );
-				var cylinderMass = 0;
-				createRigidBody( cylinder, cylinderShape, cylinderMass, pos, quat );
-				scene.add( cylinder );
+ 				pos.set( groundSize * (.5 - Math.random()), 6, groundSize * (.5 - Math.random()) );
+				tree.position.copy(pos);
+	            tree.quaternion.copy(quat);
+				var treeMass = 0;
+				createRigidBody( tree, createConvexHullPhysicsShape(tree.geometry.vertices), treeMass, pos, quat );
 			}
 		}
 
@@ -498,8 +502,13 @@
 
 			var playerX = controls.getObject().position.x;
 			var playerZ = controls.getObject().position.z;
-			var radiusX = Math.floor((Math.random() - .5) * 10);
-			var radiusZ = Math.floor(Math.random() * 16) + 5;
+			var radiusX = 0;
+			var radiusZ = 0;
+
+			while(Math.abs(radiusX) < 3 && Math.abs(playerX + radiusX) > groundSize*0.5)
+                radiusX = Math.floor((Math.random() - .5) * 16);
+            while(Math.abs(radiusZ) < 3 && Math.abs(playerZ + radiusZ) > groundSize*0.5)
+                radiusZ = Math.floor(Math.random() - .5) * 16;
 
 			pos.set((playerX) + radiusX, 0.5, (playerZ) - radiusZ);
 			quat.set(0, 0, 0, 1);
@@ -531,7 +540,11 @@
             convexBreaker.prepareBreakableObject( enemyMesh, enemyMass, new THREE.Vector3(), new THREE.Vector3(), true );
 			var enemyBody = createDebrisFromBreakableObject( enemyMesh );
 			enemyBody.setFriction(0.0);
+			enemyBody.setDamping(0.5, 0.5);
 			enemyRBList.push(enemyBody);
+
+			enemyMesh.isActive = true;
+			enemyCounter++;
 		}
 
 		function createDebrisFromBreakableObject( object ) {
@@ -553,6 +566,10 @@
 		}
 
 		function removeDebris( object ) {
+		    if(object.isActive)
+		    {
+                object.isActive = false;
+            }
 
 			scene.remove( object );
 
@@ -640,39 +657,38 @@
 		function initInput() {
 
 			window.addEventListener( 'mousedown', function( event ) {
-
-                if(controlsEnabled)
-                {
-
-                    mouseCoords.set(
-                        ( event.clientX / window.innerWidth ) * 2 - 1,
-                        - ( event.clientY / window.innerHeight ) * 2 + 1
-                    );
-
-                    raycaster.setFromCamera( mouseCoords, camera );
-
-                    // Creates a ball and throws it
-                    var ballMass = 100;
-                    var ballRadius = 0.2;
-                    var ballSpeed = 2;
-
-                    var ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
-                    ball.castShadow = true;
-                    ball.receiveShadow = true;
-                    var ballShape = new Ammo.btSphereShape( ballRadius );
-                    ballShape.setMargin( margin );
-                    pos.copy( raycaster.ray.direction );
-                    pos.add( raycaster.ray.origin );
-                    quat.set( 0, 0, 0, 1 );
-                    var ballBody = createRigidBody( ball, ballShape, ballMass, pos, quat );
-
-                    pos.copy( raycaster.ray.direction );
-                    pos.multiplyScalar( 24 );
-                    ballBody.setLinearVelocity( new Ammo.btVector3( pos.x * ballSpeed, pos.y * ballSpeed, pos.z * ballSpeed ) );
-
-				}
-
+                fireBall();
 			}, false );
+
+		}
+
+		function fireBall() {
+            if(controlsEnabled)
+            {
+                raycaster.setFromCamera( shootCoords, camera );
+
+                // Creates a ball and throws it
+                var ballMass = 100;
+                var ballRadius = 0.2;
+                var ballSpeed = 2;
+
+                var ball = new THREE.Mesh( new THREE.SphereGeometry( ballRadius, 14, 10 ), ballMaterial );
+                ball.castShadow = true;
+                ball.receiveShadow = true;
+                var ballShape = new Ammo.btSphereShape( ballRadius );
+                ballShape.setMargin( margin );
+                pos.copy( raycaster.ray.direction );
+                pos.add( raycaster.ray.origin );
+                quat.set( 0, 0, 0, 1 );
+                var ballBody = createRigidBody( ball, ballShape, ballMass, pos, quat );
+
+                pos.copy( raycaster.ray.direction );
+                pos.multiplyScalar( 24 );
+                ballBody.setLinearVelocity( new Ammo.btVector3( pos.x * ballSpeed, pos.y * ballSpeed, pos.z * ballSpeed ) );
+
+                		    console.log("FIRED");
+
+            }
 
 		}
 
@@ -685,14 +701,9 @@
 
 		}
 
-		function animate() {
+		function playerControl() {
 
-			requestAnimationFrame( animate );
-
-			var enemySpawn = 240;
-
-            if ( controlsEnabled ) {
-                var time = performance.now();
+		    var time = performance.now();
                 var delta = ( time - prevTime ) / 1000;
 
                 force.x = 0; //-= force.x * moveTaper * delta;
@@ -717,6 +728,17 @@
 
 
                 prevTime = time;
+		}
+
+		function animate() {
+
+			requestAnimationFrame( animate );
+
+			var enemySpawn = 240;
+
+            if ( controlsEnabled ) {
+
+                playerControl();
 
 				// Enemy Spawn at Constant Time Intervals
 				enemySpawnCounter++;
@@ -733,9 +755,7 @@
                                                     enemySpeed * (controls.getObject().position.z - enemyList[i].position.z));
 
 						enemyRBList[i].applyForce(distance);
-						// console.log(Math.abs(player.position.x - enemyList[i].position.x));
-						// console.log(Math.abs(player.position.z - enemyList[i].position.z));
-						if((Math.abs(player.position.x - enemyList[i].position.x) < 2) && (Math.abs(player.position.z - enemyList[i].position.z) < 2)) {
+						if(enemyList[i].isActive && enemyList[i].position.y - player.position.y > -0.3 && (Math.abs(player.position.x - enemyList[i].position.x) < 1.5) && (Math.abs(player.position.z - enemyList[i].position.z) < 1.5)) {
 							controlsEnabled = false;
 							document.getElementById('finalscore').innerHTML = "FINAL SCORE: " + score;
 							document.getElementById('endgame').style.display = "";
