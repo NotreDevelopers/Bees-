@@ -120,7 +120,7 @@
 
 		// - Global variables -
 		var enemySpawnCounter = 0;
-		var enemyCounter = 0;
+		var enemySpawn = 240;
 		var enemyList = [];
 		var enemyRBList = [];
 
@@ -505,12 +505,12 @@
 			var radiusX = 0;
 			var radiusZ = 0;
 
-			while(Math.abs(radiusX) < 3 && Math.abs(playerX + radiusX) > groundSize*0.5)
-                radiusX = Math.floor((Math.random() - .5) * 16);
-            while(Math.abs(radiusZ) < 3 && Math.abs(playerZ + radiusZ) > groundSize*0.5)
-                radiusZ = Math.floor(Math.random() - .5) * 16;
+			while(Math.abs(radiusX) < 3 || Math.abs(playerX + radiusX) > groundSize*0.5 - 5)
+                radiusX = Math.floor((Math.random() - 0.5) * 16);
+            while(Math.abs(radiusZ) < 3 || Math.abs(playerZ + radiusZ) > groundSize*0.5 - 5)
+                radiusZ = Math.floor((Math.random() - 0.5) * 16);
 
-			pos.set((playerX) + radiusX, 0.5, (playerZ) - radiusZ);
+			pos.set((playerX) + radiusX, 0.5, (playerZ) + radiusZ);
 			quat.set(0, 0, 0, 1);
 
 			var r = Math.random();
@@ -544,7 +544,6 @@
 			enemyRBList.push(enemyBody);
 
 			enemyMesh.isActive = true;
-			enemyCounter++;
 		}
 
 		function createDebrisFromBreakableObject( object ) {
@@ -734,8 +733,6 @@
 
 			requestAnimationFrame( animate );
 
-			var enemySpawn = 240;
-
             if ( controlsEnabled ) {
 
                 playerControl();
@@ -745,6 +742,8 @@
 				if(enemySpawnCounter >= enemySpawn) {
 					createEnemies(); // create more enemies
 					enemySpawnCounter = 0;
+					if(enemySpawn > 65)
+                        enemySpawn -= 5;
 				}
 
 				// Enemy
